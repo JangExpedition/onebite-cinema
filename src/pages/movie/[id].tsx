@@ -1,13 +1,34 @@
 import styles from "./[id].module.css";
 
+import { GetServerSidePropsContext, InferGetServerSidePropsType } from "next";
+import { fetchOneMovie } from "@/lib/api";
 import { useRouter } from "next/router";
-import movies from "@/dummy.json";
-import { MovieData } from "@/interface/movie";
 
-export default function Movie() {
-  const id = Number(useRouter().query.id);
-  const movie: MovieData = movies.filter((movie) => movie.id === id)[0];
+export const getServerSideProps = async (
+  context: GetServerSidePropsContext
+) => {
+  const id = context.params?.id;
+  const movie = await fetchOneMovie(Number(id));
 
+  if (!movie) {
+    return {
+      notFound: true,
+    };
+  }
+
+  return {
+    props: {
+      movie,
+    },
+  };
+};
+
+export default function Movie({
+  movie,
+}: InferGetServerSidePropsType<typeof getServerSideProps>) {
+  const router = useRouter();
+
+  if (router.isFallback) return "로딩중입니다.";
   if (!movie) return <div>존재하지 않는 영화입니다.</div>;
 
   return (

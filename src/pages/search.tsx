@@ -1,22 +1,30 @@
 import stlyes from "./search.module.css";
 
 import SearchableLayout from "@/components/searchable-layout";
-import { useRouter } from "next/router";
 import { ReactNode } from "react";
-import movies from "@/dummy.json";
-import { MovieData } from "@/interface/movie";
 import MovieItem from "@/components/movie-item";
+import { GetServerSidePropsContext, InferGetServerSidePropsType } from "next";
+import { fetchMovies } from "@/lib/api";
 
-export default function Page() {
-  const q = useRouter().query.q as string;
+export const getServerSideProps = async (
+  context: GetServerSidePropsContext
+) => {
+  const q = context.query.q as string;
+  const searchResults = await fetchMovies(q);
 
-  const filteredMovies: MovieData[] = movies.filter((movie) =>
-    movie.title.includes(q)
-  );
+  return {
+    props: {
+      searchResults,
+    },
+  };
+};
 
+export default function Page({
+  searchResults,
+}: InferGetServerSidePropsType<typeof getServerSideProps>) {
   return (
     <div className={stlyes.container}>
-      {filteredMovies.map((movie) => (
+      {searchResults.map((movie) => (
         <MovieItem key={movie.id} {...movie} />
       ))}
     </div>
